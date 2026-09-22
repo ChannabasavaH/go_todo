@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -16,14 +17,18 @@ type Config struct {
 }
 
 func LoadConfig() Config {
-	godotenv.Load()
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Println("Failed to load dotenv")
+	}
 
 	return Config{
 		Port: os.Getenv("PORT"),
-		DBHost: os.Getenv("DBHOST"),
-		DBPort: os.Getenv("DBPORT"),
-		DBUser: os.Getenv("DBUSER"),
-		DBPassword: os.Getenv("DBPASSWORD"),
-		DBName: os.Getenv("DBNAME"),
+		DBHost: os.Getenv("DB_HOST"),
+		DBPort: os.Getenv("DB_PORT"),
+		DBUser: os.Getenv("DB_USER"),
+		DBPassword: os.Getenv("DB_PASSWORD"),
+		DBName: os.Getenv("DB_NAME"),
 	}
 }

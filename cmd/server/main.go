@@ -2,38 +2,35 @@ package main
 
 import (
 	"fmt"
-
-	"net/http"
+	"log"
 
 	"github.com/gin-gonic/gin"
+
+	"todo/internal/config"
+	"todo/internal/database"
+	"todo/internal/handlers"
+	"todo/internal/repository"
+	"todo/internal/routes"
 )
 
-func getTodo(c *gin.Context){
-	c.JSON(http.StatusOK, gin.H{"method": "GET"})
-}
-
-func createTodo(c *gin.Context){
-	c.JSON(http.StatusOK, gin.H{"method": "POST"})
-}
-
-func updateTodo(c *gin.Context){
-	c.JSON(http.StatusOK, gin.H{"method": "PUT"})
-}
-
-func deleteTodo(c *gin.Context){
-	c.JSON(http.StatusOK, gin.H{"method": "DELETE"})
-}
-
 func main(){
+
+	cfg := config.LoadConfig()
+
+	db := database.ConnectPostgres(cfg)
+
+	todoRepo := repository.NewTodoRepository(db)
+
+	todoHandler := handlers.NewTodoHandler(todoRepo)
+
 	router := gin.Default()
-	
-	router.GET("/todos", getTodo)
-	router.POST("/todos", createTodo)
-	router.PUT("/todos/:id", updateTodo)
-	router.DELETE("todos/:id", deleteTodo)
-		
+
+	routes.SetUpRoutes(router, todoHandler)
+
 	fmt.Println("Todo API Server Running ")
-	err := router.Run(); if err != nil {
-		fmt.Println("Server failed to start:", err)
+	err := router.Run(":" + cfg.Port)
+	if err != nil {
+		log.Println("Server failed to start:", err)
 	}
+	_=db
 }
