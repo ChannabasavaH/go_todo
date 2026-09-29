@@ -1,0 +1,26 @@
+services:
+
+  backend:
+    build: .
+    container_name: todo_backend
+    ports:
+      - "8000:8080"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: todo_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Cha010@#3
+      POSTGRES_DB: todo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/postgres_data
+
+volumes:
+    postgres_data: 
