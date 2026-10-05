@@ -21,6 +21,7 @@ func (r *TodoRepository) CreateTodo(todo *models.Todos) error {
 	return r.DB.Create(todo).Error
 }
 
+
 func (r *TodoRepository) ReadTodo(todos *[]models.Todos) error {
 	return r.DB.Find(todos).Error
 }

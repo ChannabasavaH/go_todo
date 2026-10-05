@@ -4,42 +4,46 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"todo/internal/models"
-	"todo/internal/repository"
+	"todo/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type TodoHandler struct {
-	Repo *repository.TodoRepository
+	service *services.TodoService
 }
 
-func NewTodoHandler(repo *repository.TodoRepository) *TodoHandler {
+func NewTodoHandler(service *services.TodoService) *TodoHandler {
 	return &TodoHandler{
-		Repo: repo,
+		service: service,
 	}
 }
 
 func (h *TodoHandler) CreateTodo(c *gin.Context){
-	var todo models.Todos
+	var request struct {
+		Title string `json:"title"`
+		Description string `json:"description"`
+	}
 
-	if err := c.ShouldBindJSON(&todo); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invaild body request",
+			"error": "Invalid body request",
 		})
 		return
 	}
 
-	if todo.Title == "" || todo.Description == "" {
+	if request.Title == "" || request.Description == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Title and Description is required",
 		})
 		return
 	}
 
-	if err := h.Repo.CreateTodo(&todo); err != nil {
+	todo, err := h.service.CreateTodo(request.Title, request.Description)
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Internal Server Error",
+			"error": err.Error(),
 		})
 		return
 	}
@@ -52,9 +56,12 @@ func (h *TodoHandler) CreateTodo(c *gin.Context){
 }
 
 func (h *TodoHandler) ReadTodo(c *gin.Context){
-	var todos []models.Todos
+	var request struct {
+		Title string `json:"title"`
+		Description string `json:"description"`
+	}
 
-	if err := h.Repo.ReadTodo(&todos); err != nil {
+	if err := h.service.ReadTodo(request); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal Server Error",
 		})

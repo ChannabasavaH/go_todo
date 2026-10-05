@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package todo;
+
+option go_package = "todo/protos";
+
+service Todo {
+    rpc CreateTodo(TodoItem) returns (TodoItem);
+    rpc GetTodo(GetTodosRequest ) returns (TodoItems);
+}
+
+message GetTodosRequest {}
+
+message TodoItem {
+    string title = 1;
+    string description = 2;
+}
+
+message TodoItems {
+    repeated TodoItem items = 1;
+}
