@@ -33,3 +33,22 @@ func (s *TodoServer) CreateTodo(ctx context.Context, req *protos.TodoItem) (*pro
 		Description: todo.Description,
 	}, nil
 }
+
+func (s *TodoServer) GetTodo(ctx context.Context, req *protos.GetTodosRequest) (*protos.TodoItems, error) {
+	todos, err := s.service.GetTodos()
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := &protos.TodoItems{}
+
+	for _, todo := range todos {
+		response.Items = append(response.Items, &protos.TodoItem{
+			Title: todo.Title,
+			Description: todo.Description,
+		})
+	}
+
+	return response, nil
+}

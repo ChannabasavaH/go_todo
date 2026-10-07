@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"todo/internal/services"
@@ -56,14 +55,12 @@ func (h *TodoHandler) CreateTodo(c *gin.Context){
 }
 
 func (h *TodoHandler) ReadTodo(c *gin.Context){
-	var request struct {
-		Title string `json:"title"`
-		Description string `json:"description"`
-	}
 
-	if err := h.service.ReadTodo(request); err != nil {
+	todos, err := h.service.GetTodos()
+
+	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Internal Server Error",
+			"error": "Failed to fetch the todos",
 		})
 		return
 	}
@@ -77,7 +74,6 @@ func (h *TodoHandler) ReadTodo(c *gin.Context){
 
 func (h *TodoHandler) ReadTodoById(c *gin.Context){
 	idParam := c.Param("id")
-	log.Println(idParam)
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -86,10 +82,11 @@ func (h *TodoHandler) ReadTodoById(c *gin.Context){
 		return
 	}
 
-	var todo models.Todos
-	if err := h.Repo.ReadTodoById(uint(id), &todo); err != nil {
+	todo, err := h.service.GetTodoById(uint(id))
+
+	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Internal Server Error",
+			"error": "Could not fetch the todo",
 		})
 		return
 	}
@@ -109,29 +106,37 @@ func (h *TodoHandler) UpdateTodoById(c *gin.Context){
 			"error": "Invalid ID Format",
 		})
 		return
-	} 
+	}
 
-	var todo models.Todos
-	if err := c.ShouldBindJSON(&todo); err != nil {
+	var request struct {
+		Title string `json:"title"`
+		Description string `json:"description"`
+		Completed bool `json:"completed"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Failed to update" + err.Error(),
 		})
 		return
 	}
 
-	if todo.Title == "" || todo.Description == "" {
+	if request.Title == "" || request.Description == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Title and description are required",
 		})
 		return
 	}
 
-	if err := h.Repo.UpdateTodoById(uint(id), &todo); err != nil {
+	todo, err := h.service.UpdateTodoById(uint(id), request.Title, request.Description, request.Completed)
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Internal Server Error",
+			"error": "Failed to update the todo",
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Update Successfully",
@@ -150,8 +155,9 @@ func (h* TodoHandler) DeleteTodoById(c *gin.Context){
 		return
 	}
 
-	var todo models.Todos
-	if err := h.Repo.DeleteTodoById(uint(id), &todo); err != nil{
+	todo, err := h.service.DeleteTodoById(uint(id))
+
+	if err != nil{
 
 		if err.Error() == "record not found" {
 			c.JSON(http.StatusNotFound, gin.H{
